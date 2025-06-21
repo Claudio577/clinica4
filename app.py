@@ -8,9 +8,9 @@ from modelo import (
 st.set_page_config(page_title="Previsão Clínica Veterinária", page_icon="🐶")
 
 st.title("🐾 Análise Clínica Veterinária com IA")
-st.markdown("Insira a anamnese do paciente para prever os cuidados clínicos e analisar doenças mencionadas.")
+st.markdown("Insira a anamnese do paciente ou use um exemplo abaixo para prever o quadro clínico.")
 
-# ===== Carregar e treinar =====
+# ===== Carregar e treinar modelos =====
 try:
     df, df_doencas_graves, palavras_chave_total, palavras_chave_graves = carregar_dados()
 
@@ -23,9 +23,32 @@ except Exception as e:
     st.error(f"Erro ao carregar dados ou treinar modelos: {e}")
     st.stop()
 
-# ===== Interface de entrada =====
-texto = st.text_area("✍️ Digite a anamnese do paciente:")
+# ===== Anamnese de exemplo =====
+st.markdown("### 📌 Exemplos de Anamnese")
 
+exemplos = {
+    "✅ Alta": "Cão apresenta leve prostração e apetite normal. Mobilidade preservada. Sem febre. Temperatura corporal de 38,5 °C. Peso 12 kg, idade 5 anos. Sem histórico clínico relevante.",
+    "🟡 Doença tratável": "Paciente canino apresenta vômitos intermitentes, febre moderada (39,2 °C) e leve desidratação. Apetite reduzido e mobilidade um pouco limitada. Peso 15 kg, 8 anos. Diagnóstico prévio de giardíase e doença do carrapato, mas responde bem ao tratamento.",
+    "🔴 Doença grave com risco de eutanásia": "Cão idoso com linfoma em estágio avançado, apático, prostração intensa, sem mobilidade, vocaliza dor ao toque abdominal. Sem apetite há 3 dias, temperatura elevada (40,1 °C), peso 20 kg, 13 anos. Histórico de anemia hemolítica autoimune. Não responde a estímulos e apresenta quadro clínico irreversível."
+}
+
+col1, col2, col3 = st.columns(3)
+if col1.button("✅ Alta"):
+    st.session_state.anamnese_texto = exemplos["✅ Alta"]
+if col2.button("🟡 Doença tratável"):
+    st.session_state.anamnese_texto = exemplos["🟡 Doença tratável"]
+if col3.button("🔴 Doença grave"):
+    st.session_state.anamnese_texto = exemplos["🔴 Doença grave com risco de eutanásia"]
+
+# ===== Entrada da anamnese =====
+st.markdown("### ✍️ Digite ou edite a anamnese abaixo:")
+
+if "anamnese_texto" not in st.session_state:
+    st.session_state.anamnese_texto = ""
+
+texto = st.text_area("Anamnese do paciente:", value=st.session_state.anamnese_texto, height=200)
+
+# ===== Botão de análise =====
 if st.button("🔍 Analisar"):
     if not texto.strip():
         st.warning("Digite a anamnese primeiro.")
@@ -58,4 +81,9 @@ if st.button("🔍 Analisar"):
             st.write(", ".join(resultado['Graves Detectadas']))
         else:
             st.write(resultado['Graves Detectadas'])
+
+# ===== Botão para nova análise =====
+if st.button("🆕 Analisar nova anamnese"):
+    st.session_state.anamnese_texto = ""
+    st.experimental_rerun()
 
